@@ -1,6 +1,6 @@
 import { defineTool, ToolArgsError } from '@deepseek-ai/dsh-tools';
 /**
- * Build the mounting scope's search tool; the execution supplies its exact Agent and admission.
+ * Build the mounting scope's search tool; the execution supplies its exact Agent.
  * @param tools - retained registry used for scoped, live lookup.
  * @param config - eager names, result count, and description limits.
  * @param activatedNames - reads committed activation names for the caller; no Agent means no session activation.
@@ -34,8 +34,8 @@ export function createSearchTool(tools, config, activatedNames) {
             if (tokens.length === 0)
                 throw new ToolArgsError(['query must contain a keyword']);
             const active = new Set([...eager, ...activatedNames(exec.agent)]);
-            const candidates = tools.definitions(exec.agent, exec.toolSet)
-                .filter(tool => !active.has(tool.name) && tools.executable(tool.name, exec.agent, exec.toolSet) !== undefined)
+            const candidates = tools.schemas(exec.agent)
+                .filter(tool => !active.has(tool.name) && tools.get(tool.name, exec.agent) !== undefined)
                 .map(tool => ({
                 tool,
                 score: tokens.reduce((score, token) => score

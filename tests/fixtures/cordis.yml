@@ -9,7 +9,6 @@
     eagerTools: [read]
     maxSearchResults: 1
     descriptionMaxLength: 20
-    maxParallelToolCalls: 2
 - name: '@deepseek-ai/dsh-agent-loop'
   config:
     agents: []

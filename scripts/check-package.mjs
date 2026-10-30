@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 assert.equal(manifest.name, '@elves-ai/dsh-pi-mode')
 assert.equal(manifest.dsh.bundle.patch, './cordis.patch.yml')
-assert.equal(manifest.engines.dsh, '>=0.2.0-rc.1')
+assert.equal(manifest.engines.dsh, '>=0.2.1-rc.5 <0.2.2-0')
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish', 'prepack', 'postpack']) {
   assert(!(hook in manifest.scripts), `Distribution must not require a ${hook} script`)
 }
@@ -18,7 +18,7 @@ const [pack] = JSON.parse(execFileSync(npm, ['pack', '--dry-run', '--json', '--i
 const files = new Set(pack.files.map(file => file.path))
 for (const path of [
   'package.json', 'cordis.patch.yml', 'dist/index.js', 'dist/index.d.ts', 'dist/config.js',
-  'dist/search.js', 'dist/executor.js', 'dist/projection.js', 'locale/en.json', 'locale/zh.json',
+  'dist/search.js', 'dist/discovery.js', 'dist/projection.js', 'locale/en.json', 'locale/zh.json',
   'icon.svg', 'README.md', 'README.zh.md', 'LICENSE', 'NOTICE',
 ]) assert(files.has(path), `Missing packed file: ${path}`)
 for (const path of files) {

@@ -6,9 +6,9 @@ A community Pi-inspired coding mode for [DeepSeek Harness](https://github.com/de
 
 ## Requirements
 
-Minimum versions: **DSH v0.2.0-rc.1** and **Node.js 24.9**. The DSH requirement is a lower bound, with no upper limit or fixed-version restriction.
+Supported versions: **DSH >=0.2.1-rc.5 <0.2.2-0** and **Node.js >=24.9**. DSH 0.2.2 prereleases and later versions use different plugin APIs and are not supported by this release.
 
-The bundle includes its own progressive executor. It does not require the unpublished `@deepseek-ai/dsh-tool-executor-progressive` package or any changes to the Harness source tree.
+The bundle filters tool declarations through prompt assembly and enforces discovery through a scoped tool guard. The Host owns tool scheduling and execution; no Harness source changes or additional executor package are required.
 
 ## Install
 
@@ -46,20 +46,23 @@ Other registered tools, including file search, web access, and file delivery, ar
 
 Project instructions remain enabled. Skill descriptions are capped at 160 Unicode code points; skill bodies load on demand. Optional runtime context is omitted, while the current working directory remains available. Automatic compaction and `/compact` are retained. Shell commands run in the foreground; this preset does not add background-job tools.
 
-Discovery remains subject to the current scope, tool conditions, restrictions, guards, sandbox, and approval policy. It grants no additional permissions. Discovered names are reconstructed from successful logged search results after resume or fork; one task's discovery does not activate tools in another task.
+Search lists scope-visible tools. Execution remains subject to current registry restrictions, guards, sandbox, and approval policy. It grants no additional permissions. Discovered names are reconstructed from successful logged search results after resume or fork; one task's discovery does not activate tools in another task.
 
 ## Configuration
 
 The [bundle patch](cordis.patch.yml) owns preset `pi-mode`, Loader row `preset-pi-mode`, and its `progressive-tools` child. The separate preset ID permits installation alongside a built-in Pi preset without replacing it.
 
-| Executor option | Bundle value | Meaning |
+| Discovery option | Bundle value | Meaning |
 | --- | --- | --- |
 | `eagerTools` | Eight explicit names, plus implicit `tool_search` | Initially declared tools |
 | `maxSearchResults` | `5` | Maximum matches activated per search |
 | `descriptionMaxLength` | `160` | Maximum description code points, including a truncation ellipsis |
-| `maxParallelToolCalls` | `10` | Concurrency-safe call limit unless the Host supplies a batch override |
 
-The shell name depends on the operating system. Unknown eager tool names fail when declarations are first assembled. The executor can be mounted separately through the package's root export, but only one executor may occupy a scope.
+The shell name depends on the operating system. Unknown eager tool names fail when declarations are first assembled. The plugin can also be mounted separately through the package's root export. Configure concurrency on the Host's `@deepseek-ai/dsh-agent-loop` row using `maxParallelToolCalls`, not on this plugin.
+
+## Upgrading from 0.1.1
+
+Use a supported DSH version, reinstall this plugin, and restart DSH before creating a new Pi-mode task. If you maintain a custom overlay for `progressive-tools`, remove its `maxParallelToolCalls` key; configure the Host loop instead if needed. Existing successful search-result metadata remains readable.
 
 ## Context costs and limitations
 
@@ -67,11 +70,11 @@ Initial requests omit deferred tool schemas. Discovery adds a request before the
 
 Search is deterministic keyword matching, not semantic retrieval. Activation records names, so a replacement with the same name remains discovered but still passes current admission checks. Unlogged searches do not create restorable activations. A model can still ignore instructions; the package tests the tool and question flow, not a guarantee that every model always chooses the right action.
 
-The Host supplies Cordis, tool execution, scope, session projections, Schemastery, and Zod as optional peers. They are required at runtime; “optional” prevents package managers from installing conflicting copies. This bundle does not patch those libraries. Keep the Host and its schema libraries updated, and review [upstream security advisories](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+The Host supplies Cordis, tool execution, prompt assembly, scope, session projections, Schemastery, and Zod as optional peers. They are required at runtime; “optional” prevents package managers from installing conflicting copies. This bundle does not patch those libraries. Keep the Host and its schema libraries updated, and review [upstream security advisories](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
 
 ## Develop and test
 
-Start with an already built DSH source checkout that meets the minimum requirement. Use that checkout's own installation and build instructions first.
+Start with an already built DSH source checkout that meets the supported version range. Use that checkout's own installation and build instructions first.
 
 ```sh
 npm ci --ignore-scripts --omit=peer
@@ -81,9 +84,9 @@ npm run check
 
 `dev:link` links the checkout's Host packages into this project's development dependencies. It records the local path in ignored `.dsh-dev.json`; it does not edit any DSH profile. Zod is linked from the Host's session-projection package so both runtime schemas and TypeScript use the same version. Re-run linking after a clean dependency installation.
 
-`check` compiles the executor, checks source and test types, runs the tests, and verifies the packed file list. Run `npm run test:install` to install both a packed tarball and a linked checkout into temporary DSH homes, run the question → discovery → file-search flow through the built CLI, and remove the plugin. The tests exercise the real Harness registry, pipeline, loop, and Loader; scripted model responses and human answers replace nondeterministic input only. Rebuild and commit `dist` whenever source changes, so Git installs remain script-free.
+`check` compiles the plugin, checks source and test types, runs the tests, verifies native Node imports against the linked Host with `check:runtime`, and checks the packed file list. `check:package` validates distribution files without a Host checkout. Run `npm run test:install` to install both a packed tarball and a linked checkout into temporary DSH homes, run the question → discovery → file-search flow through the built CLI, and remove the plugin. The tests exercise the real Harness registry, execution, loop, and Loader; scripted model responses and human answers replace nondeterministic input only. Rebuild and commit `dist` whenever source changes, so Git installs remain script-free.
 
-The independent projection key is `elves-ai/dsh-pi-mode/activation`. Activation metadata retains `progressiveToolActivation`, allowing the same successful search-result format without sharing the built-in executor's projection registration.
+The independent projection key is `elves-ai/dsh-pi-mode/activation`. Activation metadata uses `progressiveToolActivation`; only committed successful results activate tools, including after resume and fork.
 
 ## License and credits
 

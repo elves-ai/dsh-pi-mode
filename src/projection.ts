@@ -2,6 +2,13 @@
 import { z } from 'zod'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 
+declare module '@deepseek-ai/dsh-session-projection' {
+  interface SessionProjectionStateMap {
+    /** Tool names activated by committed successful search results. */
+    'elves-ai/dsh-pi-mode/activation': string[]
+  }
+}
+
 const activationMeta = z.object({ progressiveToolActivation: z.array(z.string()) })
 
 /** Host-only unique names; unrelated results preserve the state reference. */

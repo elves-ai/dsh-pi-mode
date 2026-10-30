@@ -3,14 +3,13 @@ import { onTestFinished } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import LlmRuntime, { createUserMessage, LlmAdapter, ToolCallId, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import LlmRuntime, { createUserMessage, createToolResultMessage, LlmAdapter, ToolCallId, type GenerateOptions, type StreamChunk } from '@deepseek-ai/dsh-llm'
 import { bindScopeParent, createScope, type Scope } from '@deepseek-ai/dsh-scope'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjections from '@deepseek-ai/dsh-session-projection'
 import * as JsonlPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import Tools, { defineTool, type ToolBatchInput } from '@deepseek-ai/dsh-tools'
-import * as Native from '@deepseek-ai/dsh-tool-executor-native'
+import Tools, { defineTool } from '@deepseek-ai/dsh-tools'
 import * as Progressive from '../src/index.ts'
 
 export class ScriptedLlm extends LlmAdapter {
@@ -45,22 +44,21 @@ export function response(calls: Array<{ name: string; args: object }> = []): Str
   ]
 }
 
-export async function services(ctx: Context, persistenceRoot?: string, nativeExecutor = true): Promise<void> {
+export async function services(ctx: Context, persistenceRoot?: string, maxParallelToolCalls = 10): Promise<void> {
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SessionStore)
   await ctx.plugin(SessionProjections)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(Tools)
-  if (nativeExecutor) await ctx.plugin(Native)
   await ctx.plugin(AgentRegistry)
   if (persistenceRoot !== undefined) await ctx.plugin(JsonlPersistence, { root: persistenceRoot, compression: 'none' })
-  await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(AgentLoop, { agents: [], maxParallelToolCalls })
 }
 
-export async function setup(config: Partial<Progressive.Config> = {}, persistenceRoot?: string) {
+export async function setup(config: Partial<Progressive.Config> = {}, persistenceRoot?: string, maxParallelToolCalls = 10) {
   const ctx = new Context()
   onTestFinished(() => ctx.fiber.dispose())
-  await services(ctx, persistenceRoot)
+  await services(ctx, persistenceRoot, maxParallelToolCalls)
   let preset!: Scope
   const key = {}
   await ctx.plugin(Object.assign((inner: Context) => { preset = createScope(inner, key) },
@@ -87,18 +85,28 @@ export function tool(name: string, description = `${name} capability`, execute =
   })
 }
 
-export function batch(agent: Agent, names: Array<{ name: string; args?: object }>, extra: Partial<ToolBatchInput> = {}): ToolBatchInput {
-  return {
-    agent, signal: new AbortController().signal, log: { turn: 1, step: 1 },
-    calls: names.map(({ name, args = {} }, index) => ({
-      type: 'tool-call', id: ToolCallId(`batch-${agent.session.seq}-${index}`), name, arguments: JSON.stringify(args),
-    })),
-    ...extra,
-  }
+/** Single-call unit helper; real-loop tests own response scheduling and durable settlement. */
+export async function call(
+  ctx: Context, agent: Agent, name: string, args: object = {},
+  options: { log?: boolean; signal?: AbortSignal } = {},
+) {
+  const callId = ToolCallId(`call-${agent.session.seq}`)
+  const callEvent = options.log === false ? undefined : agent.session.append('tool/call', {
+    turn: 1, step: 1, callId, name, arguments: JSON.stringify(args),
+  })
+  const result = await ctx.tools.execute({
+    agent, callId, name, arguments: args, signal: options.signal ?? new AbortController().signal,
+  })
+  if (callEvent !== undefined) agent.session.append('tool/result', {
+    turn: 1, step: 1,
+    message: createToolResultMessage({ callId, content: result.content, isError: result.isError }),
+    ...result.meta === undefined ? {} : { meta: result.meta },
+  }, { surfaceOp: 'append', sourceEventSeqs: [callEvent.seq] })
+  return result
 }
 
 export async function schemas(ctx: Context, agent: Agent): Promise<string[]> {
-  return (await ctx.systemPrompt.assemble({ scope: agent })).tools.map(tool => tool.name)
+  return (await ctx.systemPrompt.assemble({ scope: agent, agent, signal: new AbortController().signal })).tools.map(tool => tool.name)
 }
 
 export async function run(ctx: Context, agent: Agent): Promise<void> {

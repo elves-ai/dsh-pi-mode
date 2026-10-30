@@ -49,9 +49,9 @@ it('boots real Loader YAML and discovers, then calls through a second model resp
   ctx.tools.register(tool('deferred', 'A deferred capability with hidden parameter details.', async () => { executed++; return 'executed' }))
   const standalone = await ctx.tools.execute({
     signal: new AbortController().signal,
-    calls: [{ type: 'tool-call', id: ToolCallId('standalone'), name: 'tool_search', arguments: '{"query":"deferred"}' }],
+    callId: ToolCallId('standalone'), name: 'tool_search', arguments: { query: 'deferred' },
   })
-  expect(standalone.results[0]?.result.isError).toBe(false)
+  expect(standalone.isError).toBe(false)
   const adapter = new ScriptedLlm([
     response([{ name: 'tool_search', args: { query: 'deferred' } }]),
     response([{ name: 'deferred', args: {} }]),

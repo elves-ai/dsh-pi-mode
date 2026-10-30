@@ -1,6 +1,6 @@
 {
   "name": "@elves-ai/dsh-pi-mode",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Pi mode for DeepSeek Harness: minimal context and progressive tool discovery.",
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "bugs": { "url": "https://github.com/elves-ai/dsh-pi-mode/issues" },
   "homepage": "https://github.com/elves-ai/dsh-pi-mode#readme",
-  "engines": { "node": ">=24.9.0", "dsh": ">=0.2.0-rc.1" },
+  "engines": { "node": ">=24.9.0", "dsh": ">=0.2.1-rc.5 <0.2.2-0" },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./package.json": "./package.json",
@@ -25,24 +25,29 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:install": "node scripts/smoke.mjs",
-    "check": "npm run build && npm run typecheck && npm test && node scripts/check-package.mjs",
+    "check": "npm run build && npm run typecheck && npm test && npm run check:runtime && npm run check:package",
+    "check:runtime": "node --input-type=module -e \"await import('@elves-ai/dsh-pi-mode')\"",
     "check:package": "node scripts/check-package.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "*",
     "@deepseek-ai/dsh-agent": "*",
+    "@deepseek-ai/dsh-llm": "*",
     "@deepseek-ai/dsh-scope": "*",
     "@deepseek-ai/dsh-session-projection": "*",
     "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/dsh-system-prompt": "*",
     "@deepseek-ai/schemastery": "*",
     "zod": "*"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },
     "@deepseek-ai/dsh-agent": { "optional": true },
+    "@deepseek-ai/dsh-llm": { "optional": true },
     "@deepseek-ai/dsh-scope": { "optional": true },
     "@deepseek-ai/dsh-session-projection": { "optional": true },
     "@deepseek-ai/dsh-tools": { "optional": true },
+    "@deepseek-ai/dsh-system-prompt": { "optional": true },
     "@deepseek-ai/schemastery": { "optional": true },
     "zod": { "optional": true }
   },

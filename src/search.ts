@@ -1,17 +1,17 @@
-/** Bounded keyword discovery over the caller's currently admitted registry. @module */
+/** Bounded keyword discovery over the caller's scope-visible registry. @module */
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { defineTool, ToolArgsError, type ToolDefinition, type ToolsService } from '@deepseek-ai/dsh-tools'
+import { defineTool, ToolArgsError, type ToolDefinition, type ToolRuntime } from '@deepseek-ai/dsh-tools'
 import type { Config } from './config.ts'
 
 /**
- * Build the mounting scope's search tool; the execution supplies its exact Agent and admission.
+ * Build the mounting scope's search tool; the execution supplies its exact Agent.
  * @param tools - retained registry used for scoped, live lookup.
  * @param config - eager names, result count, and description limits.
  * @param activatedNames - reads committed activation names for the caller; no Agent means no session activation.
  * @returns a registry-ready tool returning only names and short descriptions.
  */
 export function createSearchTool(
-  tools: ToolsService, config: Config, activatedNames: (agent: Agent | undefined) => readonly string[],
+  tools: ToolRuntime, config: Config, activatedNames: (agent: Agent | undefined) => readonly string[],
 ): ToolDefinition {
   const eager = new Set(['tool_search', ...config.eagerTools])
   return defineTool({
@@ -39,8 +39,8 @@ export function createSearchTool(
       const tokens = [...new Set(query.toLowerCase().split(/[^\p{L}\p{N}_]+/u).filter(Boolean))]
       if (tokens.length === 0) throw new ToolArgsError(['query must contain a keyword'])
       const active = new Set([...eager, ...activatedNames(exec.agent)])
-      const candidates = tools.definitions(exec.agent, exec.toolSet)
-        .filter(tool => !active.has(tool.name) && tools.executable(tool.name, exec.agent, exec.toolSet) !== undefined)
+      const candidates = tools.schemas(exec.agent)
+        .filter(tool => !active.has(tool.name) && tools.get(tool.name, exec.agent) !== undefined)
         .map(tool => ({
           tool,
           score: tokens.reduce((score, token) => score

@@ -91,9 +91,9 @@ it('loads the distributable patch and asks, discovers, then executes through rea
     expect(ctx.tools.get('tool_search', foreign.agent)).toBeUndefined()
     const rejected = await ctx.tools.execute({
       agent: pi.agent, signal: new AbortController().signal,
-      calls: [{ type: 'tool-call', id: ToolCallId('before-search'), name: 'glob', arguments: '{"pattern":"*.txt"}' }],
+      callId: ToolCallId('before-search'), name: 'glob', arguments: { pattern: '*.txt' },
     })
-    expect(rejected.results[0]?.result).toMatchObject({ isError: true, error: { info: { code: 'UNKNOWN_TOOL' } } })
+    expect(rejected).toMatchObject({ isError: true, error: { message: expect.stringContaining('tool_search first') } })
     await run(ctx, pi.agent)
     expect(humanRequests).toEqual(['Which files should I inspect?'])
     expect(adapter.requests[0]?.tools?.map(tool => tool.name)).toEqual(EAGER_TOOLS)
@@ -112,9 +112,9 @@ it('loads the distributable patch and asks, discovers, then executes through rea
     expect(await schemas(ctx, second.agent)).toEqual(EAGER_TOOLS)
     const secondDenied = await ctx.tools.execute({
       agent: second.agent, signal: new AbortController().signal,
-      calls: [{ type: 'tool-call', id: ToolCallId('other-agent'), name: 'glob', arguments: '{"pattern":"*.txt"}' }],
+      callId: ToolCallId('other-agent'), name: 'glob', arguments: { pattern: '*.txt' },
     })
-    expect(secondDenied.results[0]?.result.isError).toBe(true)
+    expect(secondDenied.isError).toBe(true)
     expect(ctx.agentPresets.composedPreset(pi.agent.ctx)).toBe('pi-mode')
     expect(ctx.agentPresets.inspectCompositions(pi.agent.ctx)[0]?.modules).toContainEqual(expect.objectContaining({
       moduleName: '@elves-ai/dsh-pi-mode',
@@ -123,8 +123,7 @@ it('loads the distributable patch and asks, discovers, then executes through rea
     await ctx.fiber.dispose()
     expect(tools.get('tool_search', pi.agent)).toBeUndefined()
     expect(tools.get('ask_user_question', pi.agent)).toBeUndefined()
-    await expect(tools.execute({ agent: pi.agent, calls: [], signal: new AbortController().signal }))
-      .rejects.toMatchObject({ code: 'TOOL_EXECUTOR_UNAVAILABLE' })
+    expect(tools.get('glob', pi.agent)).toBeUndefined()
   } finally {
     await ctx?.fiber.dispose()
     await rm(workspace, { recursive: true, force: true })
