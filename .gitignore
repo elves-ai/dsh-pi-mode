@@ -1,0 +1,6 @@
+node_modules/
+.dsh-dev.json
+coverage/
+*.tgz
+*.log
+.DS_Store

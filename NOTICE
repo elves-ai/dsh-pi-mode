@@ -1,0 +1,15 @@
+dsh-pi-mode
+Copyright (c) 2026 elves-ai contributors
+
+The progressive executor and initial preset were extracted from the local
+DeepSeek Harness implementation, licensed under MIT:
+https://github.com/deepseek-ai/deepseek-harness
+Copyright (c) 2026 DeepSeek
+
+The minimal-context and progressive-discovery approach is inspired by Pi:
+https://github.com/earendil-works/pi
+Pi is referenced as design inspiration; no Pi source code is included.
+
+The icon.svg artwork was created for this project and is covered by the
+project's MIT license. DeepSeek Harness and Pi are separate projects; this
+community plugin is not an official release of either project.

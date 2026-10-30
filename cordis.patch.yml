@@ -1,0 +1,77 @@
+# Separate id keeps the plugin independent of any built-in Pi preset.
+- insert:
+    - id: preset-pi-mode
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: pi-mode
+        name: Pi mode (plugin)
+        description: Minimal context with progressive tool discovery and interactive questions.
+        order: 10
+        plugins:
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: |-
+                You are a coding assistant in Pi mode. Be concise and finish the user's task.
+
+                Start with the core file and shell tools. Use tool_search to find additional tools by purpose; matching tools become callable in the next request. Load a matching skill before acting, then read only the references needed for the task. For unfamiliar command-line tools, inspect --help before use.
+
+                Use ask_user_question when you need the user to clarify, choose, or confirm before proceeding; do not ask only in plain text.
+
+                Read before editing. Keep changes focused, check command exit codes, and run relevant tests. Respect project instructions, sandbox denials, and approval requirements; never bypass a refusal through another tool. Ask before destructive actions. Report what changed, what was verified, and any remaining limits.
+              complete: true
+              includeRuntimeContext: false
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+            config:
+              enableRunInBackground: false
+              promoteOnTimeout: false
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+            config:
+              enableRunInBackground: false
+              promoteOnTimeout: false
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+            config:
+              catalogDescriptionMaxLength: 160
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: present
+            name: '@deepseek-ai/dsh-tool-present'
+          - id: progressive-tools
+            name: '@elves-ai/dsh-pi-mode'
+            config:
+              eagerTools: !!js "[process.platform === 'win32' ? 'pwsh' : 'bash', 'read', 'read_image', 'write', 'edit', 'skill', 'working_directory', 'ask_user_question']"
+              maxSearchResults: 5
+              descriptionMaxLength: 160
+              maxParallelToolCalls: 10
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
