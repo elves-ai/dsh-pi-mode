@@ -4,16 +4,16 @@
 
 A community Pi-inspired coding mode for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a short prompt, essential tools first, and progressive discovery for everything else.
 
-## Compatibility
+## Requirements
 
-Version 0.1.0 targets **DSH 0.2.2-alpha.2** and **Node.js 24.9 or later**. Use a matching source/development build; older DSH releases, including 0.2.1-rc.5, are not supported. Installation enforces the exact DSH version. Do not bypass that check.
+Minimum versions: **DSH v0.2.0-rc.1** and **Node.js 24.9**. The DSH requirement is a lower bound, with no upper limit or fixed-version restriction.
 
 The bundle includes its own progressive executor. It does not require the unpublished `@deepseek-ai/dsh-tool-executor-progressive` package or any changes to the Harness source tree.
 
 ## Install
 
 ```sh
-dsh plugin --profile web add github:elves-ai/dsh-pi-mode#v0.1.0
+dsh plugin --profile web add github:elves-ai/dsh-pi-mode
 ```
 
 Open a **new task** and select **Pi mode (plugin)**. If DSH reports that a restart is required, restart it first. Existing tasks retain their preset revision. Installing the bundle does not change your default mode or Standard mode.
@@ -67,11 +67,11 @@ Initial requests omit deferred tool schemas. Discovery adds a request before the
 
 Search is deterministic keyword matching, not semantic retrieval. Activation records names, so a replacement with the same name remains discovered but still passes current admission checks. Unlogged searches do not create restorable activations. A model can still ignore instructions; the package tests the tool and question flow, not a guarantee that every model always chooses the right action.
 
-The Host supplies Cordis, tool execution, scope, session projections, Schemastery, and Zod as optional peers. They are required at runtime; “optional” prevents package managers from installing conflicting copies. This bundle does not patch those libraries. Keep the Host updated and review its security advisories; the targeted development Host supplies Zod 4.4.3, which has [an upstream collection-validation advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+The Host supplies Cordis, tool execution, scope, session projections, Schemastery, and Zod as optional peers. They are required at runtime; “optional” prevents package managers from installing conflicting copies. This bundle does not patch those libraries. Keep the Host and its schema libraries updated, and review [upstream security advisories](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
 
 ## Develop and test
 
-Start with an already built DSH 0.2.2-alpha.2 source checkout. Use that checkout's own installation and build instructions first.
+Start with an already built DSH source checkout that meets the minimum requirement. Use that checkout's own installation and build instructions first.
 
 ```sh
 npm ci --ignore-scripts --omit=peer

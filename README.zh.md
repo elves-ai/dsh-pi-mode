@@ -4,16 +4,16 @@
 
 受 Pi 启发的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 社区编程模式：精简提示词，先使用基础工具，再按需发现其他工具。
 
-## 兼容性
+## 最低要求
 
-0.1.0 版面向 **DSH 0.2.2-alpha.2** 和 **Node.js 24.9 及以上版本**。请使用匹配的源码／开发构建；不支持包括 0.2.1-rc.5 在内的旧版 DSH。安装时会检查 DSH 的精确版本，请勿绕过检查。
+最低版本：**DSH v0.2.0-rc.1**、**Node.js 24.9**。DSH 仅设置最低版本，不限定固定版本或版本上限。
 
 插件包自带渐进式执行器，不依赖尚未发布的 `@deepseek-ai/dsh-tool-executor-progressive` 包，也不需要修改 Harness 源码。
 
 ## 安装
 
 ```sh
-dsh plugin --profile web add github:elves-ai/dsh-pi-mode#v0.1.0
+dsh plugin --profile web add github:elves-ai/dsh-pi-mode
 ```
 
 **新建任务**，选择 **Pi mode (plugin)**。如果 DSH 提示需要重启，请先重启。已有任务保留原来的预设版本。安装不会修改默认模式或 Standard 模式。
@@ -67,11 +67,11 @@ Shell 名称随操作系统变化。不存在的首轮工具名称会在首次�
 
 搜索采用确定性的关键词匹配，不是语义检索。激活状态记录工具名称，因此同名替换工具仍处于已发现状态，但仍须通过当前调用检查。未记录的搜索不会产生可恢复的激活状态。模型仍可能不遵循指令；测试验证工具与问答链路，不保证任何模型每次都选择正确操作。
 
-Cordis、工具执行、作用域、会话投影、Schemastery 和 Zod 由宿主提供，并声明为可选 peer。运行时仍需要它们；“可选”用于防止包管理器安装冲突副本。本插件不修改这些库。请更新宿主并关注其安全公告；所针对的开发版宿主提供 Zod 4.4.3，存在[上游集合校验安全公告](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)。
+Cordis、工具执行、作用域、会话投影、Schemastery 和 Zod 由宿主提供，并声明为可选 peer。运行时仍需要它们；“可选”用于防止包管理器安装冲突副本。本插件不修改这些库。请更新宿主及其 schema 库，并关注[上游安全公告](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)。
 
 ## 开发与测试
 
-准备已经构建的 DSH 0.2.2-alpha.2 源码仓库。请先按该仓库的说明完成依赖安装和构建。
+准备满足最低版本要求且已经构建的 DSH 源码仓库。请先按该仓库的说明完成依赖安装和构建。
 
 ```sh
 npm ci --ignore-scripts --omit=peer

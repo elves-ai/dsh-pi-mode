@@ -3,6 +3,7 @@ import { lstat, mkdir, readFile, realpath, symlink, writeFile } from 'node:fs/pr
 import { dirname, join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
+import semver from 'semver'
 
 const project = fileURLToPath(new URL('..', import.meta.url))
 const input = process.argv[2] ?? process.env.DSH_SOURCE
@@ -10,7 +11,7 @@ if (!input) throw new Error('Usage: npm run dev:link -- /path/to/built/deepseek-
 const root = await realpath(resolve(input))
 const cli = JSON.parse(await readFile(join(root, 'apps/cli/package.json'), 'utf8'))
 const manifest = JSON.parse(await readFile(join(project, 'package.json'), 'utf8'))
-if (cli.name !== '@deepseek-ai/dsh' || cli.version !== manifest.engines.dsh) {
+if (cli.name !== '@deepseek-ai/dsh' || !semver.satisfies(cli.version, manifest.engines.dsh, { includePrerelease: true })) {
   throw new Error(`Expected a built DSH ${manifest.engines.dsh} checkout; found ${cli.name}@${cli.version}`)
 }
 await lstat(join(root, 'apps/cli/lib/bin.js'))

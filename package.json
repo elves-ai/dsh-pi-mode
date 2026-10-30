@@ -1,6 +1,6 @@
 {
   "name": "@elves-ai/dsh-pi-mode",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi mode for DeepSeek Harness: minimal context and progressive tool discovery.",
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "bugs": { "url": "https://github.com/elves-ai/dsh-pi-mode/issues" },
   "homepage": "https://github.com/elves-ai/dsh-pi-mode#readme",
-  "engines": { "node": ">=24.9.0", "dsh": "0.2.2-alpha.2" },
+  "engines": { "node": ">=24.9.0", "dsh": ">=0.2.0-rc.1" },
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./package.json": "./package.json",
@@ -29,12 +29,12 @@
     "check:package": "node scripts/check-package.mjs"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "4.0.5",
-    "@deepseek-ai/dsh-agent": "0.2.2-alpha.2",
-    "@deepseek-ai/dsh-scope": "0.2.2-alpha.2",
-    "@deepseek-ai/dsh-session-projection": "0.2.2-alpha.2",
-    "@deepseek-ai/dsh-tools": "0.2.2-alpha.2",
-    "@deepseek-ai/schemastery": "3.18.5",
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-agent": "*",
+    "@deepseek-ai/dsh-scope": "*",
+    "@deepseek-ai/dsh-session-projection": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/schemastery": "*",
     "zod": "*"
   },
   "peerDependenciesMeta": {
@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "semver": "^7.8.5",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
   },

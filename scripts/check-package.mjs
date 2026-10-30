@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
 assert.equal(manifest.name, '@elves-ai/dsh-pi-mode')
 assert.equal(manifest.dsh.bundle.patch, './cordis.patch.yml')
-assert.equal(manifest.engines.dsh, '0.2.2-alpha.2')
+assert.equal(manifest.engines.dsh, '>=0.2.0-rc.1')
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish', 'prepack', 'postpack']) {
   assert(!(hook in manifest.scripts), `Distribution must not require a ${hook} script`)
 }
@@ -27,7 +27,7 @@ for (const path of files) {
 }
 for (const [name, range] of Object.entries(manifest.peerDependencies)) {
   assert.equal(manifest.peerDependenciesMeta[name]?.optional, true, `${name} must be supplied by DSH`)
-  assert(!range.startsWith('workspace:') && !range.startsWith('file:'), `${name} has a local range`)
+  assert.equal(range, '*', `${name} must use the Host version without an additional constraint`)
 }
 for (const path of files) {
   if (!path.startsWith('dist/') || !path.endsWith('.js')) continue
